@@ -1,0 +1,7 @@
+<h2>My Account</h2>
+<p>Username: <%= user.username %></p>
+<form action="/account/password" method="POST">
+<input type="password" name="newPassword" placeholder="New Password" required>
+<button type="submit">Change Password</button>
+</form>
+<a href="/content">Back</a>

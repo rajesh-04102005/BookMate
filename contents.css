@@ -1,0 +1,157 @@
+/* ===== General Styles ===== */
+body {
+    margin: 0;
+    font-family: 'Nunito', sans-serif;
+    background: #f9f9f9;
+    color: #333;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ===== Header ===== */
+header {
+    background: #3f7cac;
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+header nav a {
+    margin: 0 12px;
+    font-weight: 600;
+    color: white;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Search ===== */
+form[action="/search"] {
+    text-align: center;
+    margin: 25px 0;
+}
+
+form[action="/search"] input[type="text"] {
+    padding: 8px 12px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+form[action="/search"] button {
+    padding: 8px 15px;
+    border: none;
+    background: #3f7cac;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+form[action="/search"] button:hover {
+    background: #2f5d81;
+}
+
+/* ===== Books Section ===== */
+section.books, section.borrowed {
+    width: 85%;
+    max-width: 900px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+section h2 {
+    margin-bottom: 15px;
+    color: #3f7cac;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 10px;
+    text-align: left;
+}
+
+th {
+    background: #f2f6f8;
+    font-weight: 600;
+}
+
+td {
+    border-bottom: 1px solid #e2e2e2;
+}
+
+/* Buttons */
+button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.borrow-btn {
+    background: #28a745;
+    color: white;
+}
+
+.borrow-btn:hover {
+    background: #218838;
+}
+
+.disabled-btn {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.return-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.return-btn:hover {
+    background: #c82333;
+}
+
+/* Borrowed Books List */
+.borrowed ul {
+    list-style: none;
+    padding: 0;
+}
+
+.borrowed li {
+    padding: 10px 5px;
+    border-bottom: 1px solid #e2e2e2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 15px 0;
+    background: #f2f2f2;
+    margin-top: 30px;
+    font-size: 0.9rem;
+    color: #555;
+}
