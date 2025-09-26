@@ -2,70 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Library Dashboard</title>
-    <link rel="stylesheet" href="/contents.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookMate - Contents</title>
+    
+    <!-- Link both CSS files -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/contents.css">
 </head>
 <body>
-<header>
-    <h1>📚 My Library</h1>
-    <nav>
-        <a href="/content">Home</a>
-        <a href="/account">My Account</a>
-        <a href="/borrowed">Borrowed Books</a>
-        <a href="/logout">Logout</a>
-    </nav>
-</header>
 
-<!-- Search -->
-<form action="/search" method="GET">
-    <input type="text" name="q" placeholder="Search books">
-    <button type="submit">Search</button>
-</form>
+    <h1>Welcome, <%= user.username %>!</h1>
 
-<!-- Available Books -->
-<section class="books">
-<h2>Available Books</h2>
-<table>
-<tr>
-<th>Title</th><th>Author</th><th>Status</th><th>Action</th>
-</tr>
-<% books.forEach(book => { %>
-<tr>
-    <td><%= book.title %></td>
-    <td><%= book.author %></td>
-    <td><%= book.available ? 'Available' : 'Issued' %></td>
-    <td>
-        <% if (book.available) { %>
-        <form action="/borrow" method="POST">
-            <input type="hidden" name="bookId" value="<%= book._id %>">
-            <button type="submit">Borrow</button>
-        </form>
-        <% } else { %>
-        <button disabled>Not Available</button>
-        <% } %>
-    </td>
-</tr>
-<% }) %>
-</table>
-</section>
+    <!-- Display books -->
+    <ul>
+        <% books.forEach(book => { %>
+            <li>
+                <%= book.title %> by <%= book.author %> 
+                <% if(book.available) { %>
+                    <form action="/borrow" method="POST" style="display:inline;">
+                        <input type="hidden" name="bookId" value="<%= book._id %>">
+                        <button type="submit">Borrow</button>
+                    </form>
+                <% } else { %>
+                    <span>Not available</span>
+                <% } %>
+            </li>
+        <% }) %>
+    </ul>
 
-<!-- Borrowed Books -->
-<section class="borrowed">
-<h2>My Borrowed Books</h2>
-<ul>
-<% user.borrowedBooks?.forEach(b => { %>
-    <li><%= b.title %> – Due: <%= b.dueDate %> 
-        <form action="/return" method="POST" style="display:inline;">
-            <input type="hidden" name="bookId" value="<%= b.bookId %>">
-            <button type="submit">Return</button>
-        </form>
-    </li>
-<% }) %>
-</ul>
-</section>
+    <a href="/borrowed">My Borrowed Books</a>
+    <a href="/logout">Logout</a>
 
-<footer>
-<p>© 2025 My Library | Contact: support@mylibrary.com</p>
-</footer>
 </body>
 </html>

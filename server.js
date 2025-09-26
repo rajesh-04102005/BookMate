@@ -1,14 +1,17 @@
+// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
+const bcrypt = require('bcrypt');
 
-const PORT = 3019;
+const PORT = process.env.PORT || 3019;
 const app = express();
 
 // ===== Middleware =====
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public'))); // Serve CSS/JS
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(session({
     secret: 'secret-key',
@@ -17,11 +20,15 @@ app.use(session({
 }));
 
 // ===== MongoDB Connection =====
-mongoose.connect('mongodb://127.0.0.1:27017/lib_login');
+mongoose.connect('mongodb://127.0.0.1:27017/lib_login', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
 const db = mongoose.connection;
 db.once('open', () => console.log('Connected to MongoDB'));
 
-// ===== Models =====
+// ===== Schemas & Models =====
 const userSchema = new mongoose.Schema({
     username: String,
     password: String,
@@ -47,7 +54,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // ===== Routes =====
 
-// Login Page
+// Home/Login Page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
@@ -63,7 +70,8 @@ app.post('/signup', async (req, res) => {
     const existingUser = await Users.findOne({ username });
     if (existingUser) return res.send('Username already exists');
 
-    const newUser = new Users({ username, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new Users({ username, password: hashedPassword });
     await newUser.save();
     res.redirect('/');
 });
@@ -71,8 +79,11 @@ app.post('/signup', async (req, res) => {
 // Login User
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    const user = await Users.findOne({ username, password });
+    const user = await Users.findOne({ username });
     if (!user) return res.redirect('/signup');
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.redirect('/signup');
 
     req.session.user = user;
     res.redirect('/content');
@@ -116,9 +127,13 @@ app.post('/borrow', async (req, res) => {
     book.available = false;
     await book.save();
 
+    // Set dynamic due date (2 weeks from today)
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 14);
+
     await Users.updateOne(
         { _id: req.session.user._id },
-        { $push: { borrowedBooks: { bookId: book._id, title: book.title, dueDate: '2025-10-10' } } }
+        { $push: { borrowedBooks: { bookId: book._id, title: book.title, dueDate: dueDate.toISOString().split('T')[0] } } }
     );
     res.redirect('/content');
 });
@@ -155,7 +170,8 @@ app.get('/account', async (req, res) => {
 app.post('/account/password', async (req, res) => {
     if (!req.session.user) return res.redirect('/');
     const { newPassword } = req.body;
-    await Users.updateOne({ _id: req.session.user._id }, { password: newPassword });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await Users.updateOne({ _id: req.session.user._id }, { password: hashedPassword });
     res.send('Password updated successfully! <a href="/content">Back</a>');
 });
 
