@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BookMate</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/contents.css">
+
+    <!-- JS -->
+    <script src="js/scripts.js" defer></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-animate"></div>
+    <div class="login-container">
+        <div class="logo">
+            <svg width="48" height="48" fill="none">
+                <circle cx="24" cy="24" r="22" stroke="#4381C1" stroke-width="4"/>
+                <rect x="15" y="20" width="18" height="10" rx="3" fill="#80C7E6"/>
+                <rect x="20" y="14" width="8" height="8" rx="2" fill="#4381C1"/>
+            </svg>
+        </div>
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Log in to your Library account</p>
+
+        <!-- Static login simulation -->
+        <form id="loginForm" onsubmit="simulateLogin(event)">
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <!-- Signup link -->
+        <p class="subtitle">Don’t have an account? <a href="signup.html">Sign Up</a></p>
+    </div>
+
+    <script>
+        function simulateLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            // For demo purposes, redirect to contents.html
+            if(username) {
+                window.location.href = 'contents.html';
+            } else {
+                alert('Please enter a username');
+            }
+        }
+    </script>
+</body>
+</html>
