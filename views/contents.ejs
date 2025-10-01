@@ -2,35 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookMate - Contents</title>
-    
-    <!-- Link both CSS files -->
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>BookMate</title>
     <link rel="stylesheet" href="/css/contents.css">
 </head>
 <body>
+    <!-- Header -->
+    <header>
+        <h1>📚 My Library</h1>
+        <nav>
+            <a href="/contents">Home</a>
+            <a href="/account">My Account</a>
+            <a href="/borrowed">Borrowed Books</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
 
-    <h1>Welcome, <%= user.username %></h1>
-    <ul>
-        <% books.forEach(book => { %>
-            <li>
-            <%= book.title %> by <%= book.author %>
-            <% if(book.available) { %>
-                <form action="/borrow" method="POST" style="display:inline;">
-                <input type="hidden" name="bookId" value="<%= book._id %>">
-                <button type="submit">Borrow</button>
-                </form>
-            <% } else { %>
-                <span>Not available</span>
-            <% } %>
-            </li>
-        <% }) %>
-    </ul>
-    <a href="/borrowed">My Borrowed Books</a>
-    <a href="/account">My Account</a>
-    <a href="/logout">Logout</a>
+    <!-- Search -->
+    <form action="/search" method="GET">
+        <input type="text" name="q" placeholder="Search books">
+        <button type="submit">Search</button>
+    </form>
 
+    <!-- Available Books -->
+    <section class="books">
+        <h2>Available Books</h2>
+        <table>
+            <tr>
+                <th>Title</th><th>Author</th><th>Status</th><th>Action</th>
+            </tr>
+            <% 
+            // Show only first 3 available books
+            const availableBooks = books.filter(book => book.available).slice(0, 6);
+            availableBooks.forEach(book => { 
+            %>
+            <tr>
+                <td><%= book.title %></td>
+                <td><%= book.author %></td>
+                <td>Available</td>
+                <td>
+                    <form action="/borrow" method="POST">
+                        <input type="hidden" name="bookId" value="<%= book._id %>">
+                        <button type="submit">Borrow</button>
+                    </form>
+                </td>
+            </tr>
+            <% }) %>
+        </table>
+    </section>
 
+    <!-- Borrowed Books -->
+    <section class="borrowed">
+        <h2>My Borrowed Books</h2>
+        <% if (borrowedBooks && borrowedBooks.length > 0) { %>
+        <ul>
+            <% borrowedBooks.forEach(book => { %>
+                <li>
+                    <%= book.title %> – Due: <%= book.dueDate %>
+                </li>
+            <% }) %>
+        </ul>
+        <% } else { %>
+            <p>No books borrowed yet.</p>
+        <% } %>
+    </section>
+
+    <footer>
+        <p>© 2025 My Library | Contact: rajeshgirikadali@gmail.com</p>
+    </footer>
 </body>
 </html>

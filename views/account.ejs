@@ -1,7 +1,69 @@
-<h2>My Account</h2>
-<p>Username: <%= user.username %></p>
-<form action="/account/password" method="POST">
-    <input type="password" name="newPassword" placeholder="New Password" required>
-    <button type="submit">Change Password</button>
-</form>
-<a href="/content">Back to Library</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Account | BookMate</title>
+    <link rel="stylesheet" href="/css/contents.css">
+</head>
+<body>
+    <header>
+        <h1>📖 My Account</h1>
+    </header>
+
+    <main>
+        <!-- Student Info -->
+        <section class="account-info">
+            <h2>Account Details</h2>
+            <p><strong>Full Name:</strong> <%= user.fullName%></p>
+            <p><strong>Username:</strong> <%= user.username %></p>
+            <p><strong>Student ID / Roll No:</strong> <%= user.rollNo%></p>
+            <p><strong>Email:</strong> <%= user.email%></p>
+            <p><strong>Department:</strong> <%= user.department%></p>
+            <p><strong>Class / Year:</strong> <%= user.year%></p>
+
+            <!-- Edit Details Button -->
+            <form action="/account/edit" method="GET">
+                <button type="submit">Edit Details</button>
+            </form>
+        </section>
+
+        <!-- Borrowed Books -->
+        <section class="borrowed-info">
+            <h2>Borrowed Books</h2>
+            <% if (user.borrowedBooks && user.borrowedBooks.length > 0) { %>
+            <ul>
+                <% user.borrowedBooks.forEach(book => { %>
+                    <li>
+                        <%= book.title %> – Due: <%= book.dueDate %>
+                        <form action="/return" method="POST" style="display:inline;">
+                            <input type="hidden" name="bookId" value="<%= book.bookId %>">
+                            <button type="submit">Return</button>
+                        </form>
+                    </li>
+                <% }) %>
+            </ul>
+            <% } else { %>
+                <p>No books borrowed yet.</p>
+            <% } %>
+        </section>
+
+        <!-- Change Password -->
+        <section class="account-actions">
+            <h2>Change Password</h2>
+            <form action="/account/password" method="POST">
+                <input type="password" name="newPassword" placeholder="Enter New Password" required>
+                <button type="submit">Change Password</button>
+            </form>
+        </section>
+
+        <!-- Navigation -->
+        <nav class="account-nav">
+            <a href="/contents">⬅ Back to Library</a>
+        </nav>
+    </main>
+
+    <footer>
+        <p>© 2025 My Library | Contact: rajeshgirikadali@gmail.com</p>
+    </footer>
+</body>
+</html>

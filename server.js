@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
-const bcrypt = require('bcryptjs');
 
 const PORT = process.env.PORT || 3019;
 const app = express();
@@ -61,24 +60,14 @@ const requireAuth = (req, res, next) => {
 // ===== Routes ======
 
 // Home/Login Page
-app.get('/', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/contents');
-    }
-    res.render('login', { error: null });
-});
 
 app.get('/login', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/contents');
-    }
+    if (req.session.user) return res.redirect('/contents');
     res.render('login', { error: null });
 });
 
 app.get('/signup', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/contents');
-    }
+    if (req.session.user) return res.redirect('/contents');
     res.render('signup', { error: null });
 });
 
@@ -87,12 +76,9 @@ app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const user = await Users.findOne({ username });
-        if (!user) {
-            return res.render('login', { error: 'User not found' });
-        }
+        if (!user) return res.render('login', { error: 'User not found' });
 
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) {
+        if (user.password !== password) {
             return res.render('login', { error: 'Incorrect password' });
         }
 
@@ -108,12 +94,9 @@ app.post('/signup', async (req, res) => {
     try {
         const { username, password } = req.body;
         const existingUser = await Users.findOne({ username });
-        if (existingUser) {
-            return res.render('signup', { error: 'Username already exists' });
-        }
+        if (existingUser) return res.render('signup', { error: 'Username already exists' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new Users({ username, password: hashedPassword });
+        const newUser = new Users({ username, password }); // plain text password
         await newUser.save();
         req.session.user = newUser;
         res.redirect('/contents');
@@ -122,14 +105,34 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-// Contents Page (Library)
+// Contents Page
 app.get('/contents', requireAuth, async (req, res) => {
     try {
         const books = await Books.find();
         const user = await Users.findById(req.session.user._id);
-        res.render('contents', { books, user });
+        res.render('contents', { books, user, borrowedBooks: user.borrowedBooks });
     } catch (error) {
         res.redirect('/login');
+    }
+});
+
+// Search Books
+app.get('/search', requireAuth, async (req, res) => {
+    try {
+        const query = req.query.q;
+        const user = await Users.findById(req.session.user._id);
+
+        const books = await Books.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { author: { $regex: query, $options: 'i' } }
+            ]
+        });
+
+        res.render('contents', { books, user, borrowedBooks: user.borrowedBooks });
+    } catch (error) {
+        console.log(error);
+        res.redirect('/contents');
     }
 });
 
@@ -138,9 +141,7 @@ app.post('/borrow', requireAuth, async (req, res) => {
     try {
         const { bookId } = req.body;
         const book = await Books.findById(bookId);
-        if (!book || !book.available) {
-            return res.redirect('/contents');
-        }
+        if (!book || !book.available) return res.redirect('/contents');
 
         book.available = false;
         await book.save();
@@ -148,18 +149,9 @@ app.post('/borrow', requireAuth, async (req, res) => {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 14);
 
-        await Users.findByIdAndUpdate(
-            req.session.user._id,
-            {
-                $push: {
-                    borrowedBooks: {
-                        bookId: book._id,
-                        title: book.title,
-                        dueDate: dueDate.toISOString().split('T')[0]
-                    }
-                }
-            }
-        );
+        await Users.findByIdAndUpdate(req.session.user._id, {
+            $push: { borrowedBooks: { bookId: book._id, title: book.title, dueDate: dueDate.toISOString().split('T')[0] } }
+        });
 
         res.redirect('/contents');
     } catch (error) {
@@ -167,7 +159,7 @@ app.post('/borrow', requireAuth, async (req, res) => {
     }
 });
 
-// Borrowed Books Page
+// Borrowed Books
 app.get('/borrowed', requireAuth, async (req, res) => {
     try {
         const user = await Users.findById(req.session.user._id);
@@ -181,10 +173,7 @@ app.get('/borrowed', requireAuth, async (req, res) => {
 app.post('/return', requireAuth, async (req, res) => {
     try {
         const { bookId } = req.body;
-        await Users.findByIdAndUpdate(
-            req.session.user._id,
-            { $pull: { borrowedBooks: { bookId } } }
-        );
+        await Users.findByIdAndUpdate(req.session.user._id, { $pull: { borrowedBooks: { bookId: bookId } } });
         await Books.findByIdAndUpdate(bookId, { available: true });
         res.redirect('/borrowed');
     } catch (error) {
@@ -206,11 +195,7 @@ app.get('/account', requireAuth, async (req, res) => {
 app.post('/account/password', requireAuth, async (req, res) => {
     try {
         const { newPassword } = req.body;
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await Users.findByIdAndUpdate(
-            req.session.user._id,
-            { password: hashedPassword }
-        );
+        await Users.findByIdAndUpdate(req.session.user._id, { password: newPassword });
         res.redirect('/account');
     } catch (error) {
         res.redirect('/account');

@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>BookMate</title>
-    <link rel="stylesheet" href="css/styles.css">
-
-
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <div class="login-container">
         <h2>Create an Account</h2>
-        <form action="/signup" method="POST">
-        <input type="text" name="username" placeholder="Choose Username" required>
-        <input type="password" name="password" placeholder="Choose Password" required>
-        <button type="submit">Sign Up</button>
+        <form action="/signup" method="POST" autocomplete="off">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="Choose Username" required>
+            </div>
+            <div class="input-group">
+                <input type="password" name="password" placeholder="Choose Password" required>
+            </div>
+            <button type="submit" class="login-btn">Sign Up</button>
         </form>
         <p>Already have an account? <a href="/login">Login</a></p>
+
+        <!-- Dynamic error message -->
         <% if (typeof error !== 'undefined') { %>
-        <p style="color:red;"><%= error %></p>
+            <p style="color:red;"><%= error %></p>
         <% } %>
     </div>
 </body>
