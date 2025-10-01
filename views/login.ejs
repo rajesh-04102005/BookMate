@@ -2,16 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BookMate</title>
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/contents.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <title>BookMate | Login</title>
 
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/contents.css">
+    <link rel="stylesheet" href="/css/styles.css">
 
     <!-- JS -->
-    <script src="js/scripts.js" defer></script>
-
-
+    <script src="/js/scripts.js" defer></script>
 
     <link href="https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap" rel="stylesheet">
 </head>
@@ -28,32 +26,24 @@
         <h2>Welcome Back</h2>
         <p class="subtitle">Log in to your Library account</p>
 
-        <!-- Static login simulation -->
-        <form id="loginForm" onsubmit="simulateLogin(event)">
+        <!-- Login form connected to Express route -->
+        <form action="/login" method="POST">
             <div class="input-group">
-                <input type="text" id="username" placeholder="Username" required>
+                <input type="text" name="username" placeholder="Username" required>
             </div>
             <div class="input-group">
-                <input type="password" id="password" placeholder="Password" required>
+                <input type="password" name="password" placeholder="Password" required>
             </div>
             <button type="submit" class="login-btn">Login</button>
         </form>
 
         <!-- Signup link -->
-        <p class="subtitle">Don’t have an account? <a href="signup.html">Sign Up</a></p>
-    </div>
+        <p class="subtitle">Don’t have an account? <a href="/signup">Sign Up</a></p>
 
-    <script>
-        function simulateLogin(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            // For demo purposes, redirect to contents.html
-            if(username) {
-                window.location.href = 'contents.html';
-            } else {
-                alert('Please enter a username');
-            }
-        }
-    </script>
+        <!-- Error messages (optional) -->
+        <% if (typeof error !== 'undefined') { %>
+            <p style="color: red; text-align: center;"><%= error %></p>
+        <% } %>
+    </div>
 </body>
 </html>

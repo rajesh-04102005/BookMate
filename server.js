@@ -3,7 +3,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+
+
+
+
 
 const PORT = process.env.PORT || 3019;
 const app = express();
@@ -52,17 +56,19 @@ const Books = mongoose.model('books', bookSchema);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+
 // ===== Routes =====
 
 // Home/Login Page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.render('login'); // renders views/login.ejs
 });
 
-// Signup Page
+
 app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'signup.html'));
+    res.render('signup'); // renders views/signup.ejs
 });
+
 
 // Register User
 app.post('/signup', async (req, res) => {
@@ -76,18 +82,18 @@ app.post('/signup', async (req, res) => {
     res.redirect('/');
 });
 
-// Login User
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await Users.findOne({ username });
-    if (!user) return res.redirect('/signup');
+    if (!user) return res.render('login', { error: 'User not found' });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.redirect('/signup');
+    if (!match) return res.render('login', { error: 'Incorrect password' });
 
     req.session.user = user;
     res.redirect('/content');
 });
+
 
 // Logout
 app.get('/logout', (req, res) => {
