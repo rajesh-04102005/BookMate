@@ -1,13 +1,13 @@
 <h2>My Borrowed Books</h2>
 <ul>
-<% borrowedBooks.forEach(book => { %>
-<li>
-<%= book.title %> - Due: <%= book.dueDate %>
-<form action="/return" method="POST" style="display:inline;">
-<input type="hidden" name="bookId" value="<%= book.bookId %>">
-<button class="return-btn" type="submit">Return</button>
-</form>
-</li>
-<% }) %>
+    <% borrowedBooks.forEach(book => { %>
+        <li>
+        <%= book.title %> - Due: <%= book.dueDate %>
+        <form action="/return" method="POST" style="display:inline;">
+            <input type="hidden" name="bookId" value="<%= book.bookId %>">
+            <button type="submit">Return</button>
+        </form>
+        </li>
+    <% }) %>
 </ul>
-<a href="/content">Back</a>
+<a href="/content">Back to Library</a>

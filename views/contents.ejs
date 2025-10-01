@@ -11,27 +11,26 @@
 </head>
 <body>
 
-    <h1>Welcome, <%= user.username %>!</h1>
-
-    <!-- Display books -->
+    <h1>Welcome, <%= user.username %></h1>
     <ul>
         <% books.forEach(book => { %>
             <li>
-                <%= book.title %> by <%= book.author %> 
-                <% if(book.available) { %>
-                    <form action="/borrow" method="POST" style="display:inline;">
-                        <input type="hidden" name="bookId" value="<%= book._id %>">
-                        <button type="submit">Borrow</button>
-                    </form>
-                <% } else { %>
-                    <span>Not available</span>
-                <% } %>
+            <%= book.title %> by <%= book.author %>
+            <% if(book.available) { %>
+                <form action="/borrow" method="POST" style="display:inline;">
+                <input type="hidden" name="bookId" value="<%= book._id %>">
+                <button type="submit">Borrow</button>
+                </form>
+            <% } else { %>
+                <span>Not available</span>
+            <% } %>
             </li>
         <% }) %>
     </ul>
-
     <a href="/borrowed">My Borrowed Books</a>
+    <a href="/account">My Account</a>
     <a href="/logout">Logout</a>
+
 
 </body>
 </html>

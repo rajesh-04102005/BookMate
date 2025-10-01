@@ -1,22 +1,16 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 
-
-
-
-
 const PORT = process.env.PORT || 3019;
 const app = express();
 
 // ===== Middleware =====
-app.use(express.static(path.join(__dirname, 'public'))); // Serve CSS/JS
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 app.use(session({
     secret: 'secret-key',
     resave: false,
@@ -27,7 +21,7 @@ app.use(session({
 mongoose.connect('mongodb://127.0.0.1:27017/lib_login', {
     useNewUrlParser: true,
     useUnifiedTopology: true
-});
+}).catch(err => console.log('MongoDB connection error:', err));
 
 const db = mongoose.connection;
 db.once('open', () => console.log('Connected to MongoDB'));
@@ -56,129 +50,176 @@ const Books = mongoose.model('books', bookSchema);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// ===== Authentication Middleware =====
+const requireAuth = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    next();
+};
 
-// ===== Routes =====
+// ===== Routes ======
 
 // Home/Login Page
 app.get('/', (req, res) => {
-    res.render('login'); // renders views/login.ejs
+    if (req.session.user) {
+        return res.redirect('/contents');
+    }
+    res.render('login', { error: null });
 });
 
+app.get('/login', (req, res) => {
+    if (req.session.user) {
+        return res.redirect('/contents');
+    }
+    res.render('login', { error: null });
+});
 
 app.get('/signup', (req, res) => {
-    res.render('signup'); // renders views/signup.ejs
+    if (req.session.user) {
+        return res.redirect('/contents');
+    }
+    res.render('signup', { error: null });
 });
 
-
-// Register User
-app.post('/signup', async (req, res) => {
-    const { username, password } = req.body;
-    const existingUser = await Users.findOne({ username });
-    if (existingUser) return res.send('Username already exists');
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new Users({ username, password: hashedPassword });
-    await newUser.save();
-    res.redirect('/');
-});
-
+// Login POST
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    const user = await Users.findOne({ username });
-    if (!user) return res.render('login', { error: 'User not found' });
+    try {
+        const { username, password } = req.body;
+        const user = await Users.findOne({ username });
+        if (!user) {
+            return res.render('login', { error: 'User not found' });
+        }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.render('login', { error: 'Incorrect password' });
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.render('login', { error: 'Incorrect password' });
+        }
 
-    req.session.user = user;
-    res.redirect('/content');
+        req.session.user = user;
+        res.redirect('/contents');
+    } catch (error) {
+        res.render('login', { error: 'Login failed. Please try again.' });
+    }
 });
 
+// Signup POST
+app.post('/signup', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const existingUser = await Users.findOne({ username });
+        if (existingUser) {
+            return res.render('signup', { error: 'Username already exists' });
+        }
 
-// Logout
-app.get('/logout', (req, res) => {
-    req.session.destroy(() => res.redirect('/'));
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new Users({ username, password: hashedPassword });
+        await newUser.save();
+        req.session.user = newUser;
+        res.redirect('/contents');
+    } catch (error) {
+        res.render('signup', { error: 'Signup failed. Please try again.' });
+    }
 });
 
-// Content Page - Show all books
-app.get('/content', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const books = await Books.find();
-    const user = await Users.findById(req.session.user._id);
-    res.render('contents', { books, user });
-});
-
-// Search Books
-app.get('/search', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const { q } = req.query;
-    const books = await Books.find({
-        $or: [
-            { title: { $regex: q, $options: 'i' } },
-            { author: { $regex: q, $options: 'i' } },
-            { isbn: { $regex: q, $options: 'i' } }
-        ]
-    });
-    const user = await Users.findById(req.session.user._id);
-    res.render('contents', { books, user });
+// Contents Page (Library)
+app.get('/contents', requireAuth, async (req, res) => {
+    try {
+        const books = await Books.find();
+        const user = await Users.findById(req.session.user._id);
+        res.render('contents', { books, user });
+    } catch (error) {
+        res.redirect('/login');
+    }
 });
 
 // Borrow Book
-app.post('/borrow', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const { bookId } = req.body;
-    const book = await Books.findById(bookId);
-    if (!book || !book.available) return res.send('Book not available');
+app.post('/borrow', requireAuth, async (req, res) => {
+    try {
+        const { bookId } = req.body;
+        const book = await Books.findById(bookId);
+        if (!book || !book.available) {
+            return res.redirect('/contents');
+        }
 
-    book.available = false;
-    await book.save();
+        book.available = false;
+        await book.save();
 
-    // Set dynamic due date (2 weeks from today)
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 14);
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
 
-    await Users.updateOne(
-        { _id: req.session.user._id },
-        { $push: { borrowedBooks: { bookId: book._id, title: book.title, dueDate: dueDate.toISOString().split('T')[0] } } }
-    );
-    res.redirect('/content');
+        await Users.findByIdAndUpdate(
+            req.session.user._id,
+            {
+                $push: {
+                    borrowedBooks: {
+                        bookId: book._id,
+                        title: book.title,
+                        dueDate: dueDate.toISOString().split('T')[0]
+                    }
+                }
+            }
+        );
+
+        res.redirect('/contents');
+    } catch (error) {
+        res.redirect('/contents');
+    }
 });
 
 // Borrowed Books Page
-app.get('/borrowed', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const user = await Users.findById(req.session.user._id);
-    res.render('borrowed', { borrowedBooks: user.borrowedBooks });
+app.get('/borrowed', requireAuth, async (req, res) => {
+    try {
+        const user = await Users.findById(req.session.user._id);
+        res.render('borrowed', { borrowedBooks: user.borrowedBooks });
+    } catch (error) {
+        res.redirect('/contents');
+    }
 });
 
 // Return Book
-app.post('/return', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const { bookId } = req.body;
-
-    await Users.updateOne(
-        { _id: req.session.user._id },
-        { $pull: { borrowedBooks: { bookId } } }
-    );
-
-    await Books.findByIdAndUpdate(bookId, { available: true });
-    res.redirect('/borrowed');
+app.post('/return', requireAuth, async (req, res) => {
+    try {
+        const { bookId } = req.body;
+        await Users.findByIdAndUpdate(
+            req.session.user._id,
+            { $pull: { borrowedBooks: { bookId } } }
+        );
+        await Books.findByIdAndUpdate(bookId, { available: true });
+        res.redirect('/borrowed');
+    } catch (error) {
+        res.redirect('/borrowed');
+    }
 });
 
-// My Account Page
-app.get('/account', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const user = await Users.findById(req.session.user._id);
-    res.render('account', { user });
+// Account Page
+app.get('/account', requireAuth, async (req, res) => {
+    try {
+        const user = await Users.findById(req.session.user._id);
+        res.render('account', { user });
+    } catch (error) {
+        res.redirect('/contents');
+    }
 });
 
 // Change Password
-app.post('/account/password', async (req, res) => {
-    if (!req.session.user) return res.redirect('/');
-    const { newPassword } = req.body;
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await Users.updateOne({ _id: req.session.user._id }, { password: hashedPassword });
-    res.send('Password updated successfully! <a href="/content">Back</a>');
+app.post('/account/password', requireAuth, async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await Users.findByIdAndUpdate(
+            req.session.user._id,
+            { password: hashedPassword }
+        );
+        res.redirect('/account');
+    } catch (error) {
+        res.redirect('/account');
+    }
+});
+
+// Logout
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => res.redirect('/login'));
 });
 
 // ===== Start Server =====
