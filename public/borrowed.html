@@ -1,13 +1,44 @@
-<h2>My Borrowed Books</h2>
-<ul>
-<% borrowedBooks.forEach(book => { %>
-<li>
-<%= book.title %> - Due: <%= book.dueDate %>
-<form action="/return" method="POST" style="display:inline;">
-<input type="hidden" name="bookId" value="<%= book.bookId %>">
-<button class="return-btn" type="submit">Return</button>
-</form>
-</li>
-<% }) %>
-</ul>
-<a href="/content">Back</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Borrowed Books | BookMate</title>
+    <link rel="stylesheet" href="css/contents.css">
+</head>
+<body>
+    <header>
+        <h1>📚 My Borrowed Books</h1>
+    </header>
+
+    <main>
+        <h2>Borrowed Books</h2>
+        <ul>
+            <li>
+                The Great Gatsby – Due: 2025-10-10
+                <form action="#">
+                    <input type="hidden" name="bookId" value="1">
+                    <button class="return-btn" type="submit">Return</button>
+                </form>
+            </li>
+            <li>
+                To Kill a Mockingbird – Due: 2025-10-15
+                <form action="#">
+                    <input type="hidden" name="bookId" value="2">
+                    <button class="return-btn" type="submit">Return</button>
+                </form>
+            </li>
+            <li>
+                1984 – Due: 2025-10-20
+                <form action="#">
+                    <input type="hidden" name="bookId" value="3">
+                    <button class="return-btn" type="submit">Return</button>
+                </form>
+            </li>
+        </ul>
+
+        <nav>
+            <a href="contents.html">⬅ Back to Library</a>
+        </nav>
+    </main>
+</body>
+</html>
