@@ -1,6 +1,7 @@
-<nav>
-        <a href="/content">Home</a>
-        <a href="/account">My Account</a>
-        <a href="/borrowed">Borrowed Books</a>
-        <a href="/logout">Logout</a>
-    </nav>
+<h2>My Account</h2>
+<p>Username: <%= user.username %></p>
+<form action="/account/password" method="POST">
+<input type="password" name="newPassword" placeholder="New Password" required>
+<button type="submit">Change Password</button>
+</form>
+<a href="/content">Back</a>
